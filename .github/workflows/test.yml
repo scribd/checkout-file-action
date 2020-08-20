@@ -1,0 +1,49 @@
+name: Test
+on: push
+
+jobs:
+  # confirm we can pull a single file from the current repo
+  checkout_from_this_repo:
+    name: This Repo/This Branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: justAnotherDev/checkout-file-action@v1
+        with:
+          file-path: tests/hello-world.txt
+      - run: cat tests/hello-world.txt
+
+  # confirm we can pull two files from the current repo on a specific branch
+  checkout_from_this_repo_with_branch:
+    name: This Repo/Custom Branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: justAnotherDev/checkout-file-action@v1
+        with:
+          file-path: |
+            tests/hello-world.txt
+            tests/other-file.txt
+          branch: testing
+      - run: cat tests/other-file.txt && tests/other-file.txt
+
+  # confirm we can pull a single file from a public repo
+  checkout_from_public_repo:
+    name: Public Repo/Default Branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: justAnotherDev/checkout-file-action@v1
+        with:
+          file-path: action.yml
+          repo: actions/cache
+      - run: cat action.yml
+
+  # confirm we can pull a single file from a private repo
+  checkout_from_private_repo:
+    name: Private Repo/Default Branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: justAnotherDev/checkout-file-action@v1
+        with:
+          file-path: tests/hello-world.txt
+          repo: justAnotherDev/checkout-file-action-private-mirror
+          github-token: ${{ secrets.ACCESS_TOKEN }}
+      - run: cat tests/hello-world.txt
