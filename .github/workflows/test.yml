@@ -23,7 +23,7 @@ jobs:
             tests/hello-world.txt
             tests/other-file.txt
           branch: testing
-      - run: cat tests/other-file.txt && tests/other-file.txt
+      - run: cat tests/other-file.txt && cat tests/other-file.txt
 
   # confirm we can pull a single file from a public repo
   checkout_from_public_repo:
