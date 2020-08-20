@@ -1,0 +1,21 @@
+{
+  "name": "checkout-file-action",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/justAnotherDev/file-checkout-action/issues"
+  },
+  "homepage": "https://github.com/justAnotherDev/file-checkout-action#readme",
+  "dependencies": {
+    "@actions/core": "^1.2.4",
+    "sync-request": "^6.1.0",
+    "fs-extra": "^9.0.1"
+  }
+}

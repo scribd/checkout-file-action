@@ -1,0 +1,20 @@
+name: 'Checkout File'
+description: 'Checkout individual files from a repo'
+inputs:
+  file-path:
+    description: 'The file(s) to checkout'
+    required: true
+  github-token:
+    description: 'The GitHub token to use. Only necessary if retrieving files from a different private repository.'
+    required: true
+    default: ${{ github.token }}
+  repo:
+    description: 'The GitHub repository to retrieve the file from. Defaults to the current repository.'
+    required: true
+    default: ${{ github.repository }}
+  branch:
+    description: 'The branch to pull the file from. Defaults to the current branch if checking out a file from the current repository, otherwise defaults to the main branch of the repository being checked out.'
+    required: false
+runs:
+  using: 'node12'
+  main: 'index.js'
