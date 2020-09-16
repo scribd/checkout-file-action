@@ -3,27 +3,23 @@ const request = require('sync-request');
 const fse = require('fs-extra');
 
 // extract inputs
-const filePaths = core.getInput('file-path');
+const filePaths = core.getInput('file-path').split("\n");
 const requestOptions = { headers: {'Authorization': "token " + core.getInput('github-token'), 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'checkout-file-action'} };
 const repo = core.getInput('repo');
 const branch = core.getInput('branch') ? ('refs/heads/' + core.getInput('branch')) : (repo == process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REF : null)
 
 // retrieve each file
-filePaths.split("\n").forEach(path => retrieveFile(path))
+retrieveFileInfos(filePaths).forEach(info => retrieveFile(info))
 
-function retrieveFile(filePath) {
+function retrieveFile(info) {
 	try {
-		// setup request
-		const url = 'https://api.github.com/repos/' + repo + '/contents/' + filePath + (branch ? '?ref=' + branch : '');
-
-		// execute the request
+		const url = 'https://api.github.com/repos/' + repo + '/git/blobs/' + info.sha;
 		const response = request('GET', url, requestOptions);
 		if (response.statusCode != 200) {
-			handleNon200(response, filePath);
+			handleNon200(response, info.path);
 			return;
 		}
 
-		// parse the JSON and extract the base64 encoded file contents
 		const body = response.body.toString();
 		const json = JSON.parse(body);
 		const encodedContent = json.content;
@@ -37,11 +33,32 @@ function retrieveFile(filePath) {
 		content = buffer.toString('ascii');
 
 		// save the file to disk
-		fse.outputFileSync(filePath, content);
-		core.info('Successfully retrieved ' + filePath);
+		fse.outputFileSync(info.path, content);
+		core.info('Successfully retrieved ' + info.path);
 	} catch (error) {
-		core.setFailed(error.message);
+		core.setFailed("Failed in retrieveFile(info). Error: " + error.message);
 	}
+}
+
+function retrieveFileInfos(matching) {
+	try {
+		const url = 'https://api.github.com/repos/' + repo + '/git/trees/' + ((branch ? branch : 'master') + '?recursive=true');
+		const response = request('GET', url, requestOptions);
+		if (response.statusCode != 200) {
+			handleNon200(response, filePath);
+			return;
+		}
+
+		const body = response.body.toString();
+		const json = JSON.parse(body);
+		return json.tree.filter(info => info.type == "blob" && pathsContain(matching, info.path))
+	} catch (error) {
+		core.setFailed("Failed in retrieveAllFiles(matching). Error: " + error.message);
+	}
+}
+
+function pathsContain(paths, subpath) {
+	return paths.find(rootPath => rootPath == "./" || rootPath == subpath || subpath.startsWith(rootPath + '/')) != null
 }
 
 function handleNon200(response, filePath) {

@@ -23,7 +23,7 @@ The branch to pull the file from. Defaults to the current branch if checking out
 ## Example usage
 
 ```yaml
-uses: justAnotherDev/checkout-file-action@v1
+uses: justAnotherDev/checkout-file-action@v2
 with:
   file-path: |
     action.yml
