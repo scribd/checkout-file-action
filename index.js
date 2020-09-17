@@ -6,10 +6,10 @@ const fse = require('fs-extra');
 const filePaths = core.getInput('file-path').split("\n");
 const requestOptions = { headers: {'Authorization': "token " + core.getInput('github-token'), 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'checkout-file-action'} };
 const repo = core.getInput('repo');
-const branch = core.getInput('branch') ? ('refs/heads/' + core.getInput('branch')) : (repo == process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REF : null)
+const branch = core.getInput('branch') ? ('refs/heads/' + core.getInput('branch')) : (repo == process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REF : "master")
 
 // retrieve each file
-retrieveFileInfos(filePaths).forEach(info => retrieveFile(info))
+batchRetrieveFiles(retrieveFileInfos(filePaths));
 
 function retrieveFile(info) {
 	try {
@@ -40,9 +40,44 @@ function retrieveFile(info) {
 	}
 }
 
+function batchRetrieveFiles(fileInfos) {
+	try {
+		const binaryObjects = fileInfos.filter(info => info.isBinary)
+		const textObjects = fileInfos.filter(info => binaryObjects.indexOf(info) === -1)
+		const graphObjects = textObjects.map((info, index) => 'file' + index + ': object(expression: "' + info.sha + '") { ... on Blob { text } }').join(',\n');
+		const query = '{ files: repository(owner: "' + repo.split("/").join('", name: "') + '") { ' + graphObjects + ' } }'
+		const url = 'https://api.github.com/graphql';
+		const requestOptions = { 
+			headers: {'Authorization': "token " + core.getInput('github-token'), 'User-Agent': 'checkout-file-action'},
+			json: {'query': query }
+		};
+
+		const response = request('POST', url, requestOptions);
+		if (response.statusCode != 200) {
+			handleNon200(response);
+			return;
+		}
+
+		const body = response.body.toString();
+		const json = JSON.parse(body);
+		const fileContents = json.data.files;
+
+		fileInfos.forEach((info, index) => {
+			fse.outputFileSync(info.path, fileContents["file" + index].text)
+			core.info('Successfully retrieved ' + info.path);
+		});
+
+		// retrieve all of the binary files
+		textObjects.every(retrieveFile)
+
+	} catch (error) {
+		core.setFailed("Failed in batchRetrieveFiles(fileInfos). Error: " + error.message);
+	}
+}
+
 function retrieveFileInfos(matching) {
 	try {
-		const url = 'https://api.github.com/repos/' + repo + '/git/trees/' + ((branch ? branch : 'master') + '?recursive=true');
+		const url = 'https://api.github.com/repos/' + repo + '/git/trees/' + branch + '?recursive=true';
 		const response = request('GET', url, requestOptions);
 		if (response.statusCode != 200) {
 			handleNon200(response, filePath);
@@ -51,7 +86,7 @@ function retrieveFileInfos(matching) {
 
 		const body = response.body.toString();
 		const json = JSON.parse(body);
-		return json.tree.filter(info => info.type == "blob" && pathsContain(matching, info.path))
+		return json.tree.filter(info => info.type == "blob" && pathsContain(matching, info.path)).sort((a, b) => b.size - a.size)
 	} catch (error) {
 		core.setFailed("Failed in retrieveAllFiles(matching). Error: " + error.message);
 	}
