@@ -7,7 +7,7 @@ jobs:
     name: This Repo/This Branch
     runs-on: ubuntu-latest
     steps:
-      - uses: justAnotherDev/checkout-file-action@v3
+      - uses: scribd/checkout-file-action@v3
         with:
           file-path: tests/hello-world.txt
       - run: cat tests/hello-world.txt
@@ -17,7 +17,7 @@ jobs:
     name: This Repo/This Branch Get Folder
     runs-on: ubuntu-latest
     steps:
-      - uses: justAnotherDev/checkout-file-action@v3
+      - uses: scribd/checkout-file-action@v3
         with:
           file-path: |
             tests
@@ -28,7 +28,7 @@ jobs:
     name: This Repo/Branch Get Binary
     runs-on: ubuntu-latest
     steps:
-      - uses: justAnotherDev/checkout-file-action@v3
+      - uses: scribd/checkout-file-action@v3
         with:
           file-path: |
             tests
@@ -40,7 +40,7 @@ jobs:
     name: This Repo/Custom Branch
     runs-on: ubuntu-latest
     steps:
-      - uses: justAnotherDev/checkout-file-action@v3
+      - uses: scribd/checkout-file-action@v3
         with:
           file-path: |
             tests/hello-world.txt
@@ -53,7 +53,7 @@ jobs:
     name: Public Repo/Default Branch
     runs-on: ubuntu-latest
     steps:
-      - uses: justAnotherDev/checkout-file-action@v3
+      - uses: scribd/checkout-file-action@v3
         with:
           file-path: action.yml
           repo: actions/cache
@@ -64,10 +64,10 @@ jobs:
     name: Private Repo/Default Branch
     runs-on: ubuntu-latest
     steps:
-      - uses: justAnotherDev/checkout-file-action@v3
+      - uses: scribd/checkout-file-action@v3
         with:
           file-path: tests/hello-world.txt
-          repo: justAnotherDev/checkout-file-action-private-mirror
+          repo: scribd/checkout-file-action-private-mirror
           github-token: ${{ secrets.ACCESS_TOKEN }}
       - run: cat tests/hello-world.txt
 

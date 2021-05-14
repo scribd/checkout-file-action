@@ -23,11 +23,11 @@ The branch to pull the file from. Defaults to the current branch if checking out
 ## Example usage
 
 ```yaml
-uses: justAnotherDev/checkout-file-action@v3
+uses: scribd/checkout-file-action@v3
 with:
   file-path: |
     action.yml
     tests/hello-world.txt
 ```
 
-More examples [here](https://github.com/justAnotherDev/checkout-file-action/blob/master/.github/workflows/test.yml).
+More examples [here](https://github.com/scribd/checkout-file-action/blob/master/.github/workflows/test.yml).
