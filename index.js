@@ -36,7 +36,7 @@ function retrieveFile(info) {
 		fse.outputFileSync(info.path, content);
 		core.info('Successfully retrieved ' + info.path);
 	} catch (error) {
-		core.setFailed("Failed in retrieveFile(info). Error: " + error.message);
+		core.setFailed(`Failed in retrieveFile(info). Error: ${error}`);
 	}
 }
 
@@ -71,7 +71,7 @@ function batchRetrieveFiles(fileInfos) {
 		textObjects.every(retrieveFile)
 
 	} catch (error) {
-		core.setFailed("Failed in batchRetrieveFiles(fileInfos). Error: " + error.message);
+		core.setFailed(`Failed in batchRetrieveFiles(fileInfos). Error: ${error}`);
 	}
 }
 
@@ -80,7 +80,7 @@ function retrieveFileInfos(matching) {
 		const url = 'https://api.github.com/repos/' + repo + '/git/trees/' + branch + '?recursive=true';
 		const response = request('GET', url, requestOptions);
 		if (response.statusCode != 200) {
-			handleNon200(response, filePath);
+			handleNon200(response);
 			return;
 		}
 
@@ -88,7 +88,7 @@ function retrieveFileInfos(matching) {
 		const json = JSON.parse(body);
 		return json.tree.filter(info => info.type == "blob" && pathsContain(matching, info.path)).sort((a, b) => b.size - a.size)
 	} catch (error) {
-		core.setFailed("Failed in retrieveAllFiles(matching). Error: " + error.message);
+		core.setFailed(`Failed in retrieveAllFiles(matching). Error: ${error}`);
 	}
 }
 
@@ -101,28 +101,33 @@ function handleNon200(response, filePath) {
 		const body = response.body.toString();
 		const json = JSON.parse(body);
 
-		if (json.message == 'Not Found') {
-			if (checkForAccessToRepo()) {
-				core.setFailed('The file "' + filePath + '" does not exist. Exiting.');
-			} else {
-				core.setFailed('Unable to access ' + repo + ". Either the repository doesn't exist or the provided GitHub token doesn't have access. Exiting.");
-			}
+		if (json.message == 'Not Found' && filePath) {
+			checkForAccessToRepo()
+			core.setFailed('The file "' + filePath + '" does not exist. Exiting.');
 		} else if (json.message == 'Bad credentials') {
 			core.setFailed("The provided GitHub token doesn't have access. Exiting.")
 		} else {
+			checkForAccessToRepo()
 			core.setFailed('Invalid response code: ' + response.statusCode + '\n\n' + body);
 		}
 	} catch (error) {
+		checkForAccessToRepo()
 		core.setFailed('Invalid response code: ' + response.statusCode + '\n\n' + body);
 	}
+	process.exit(1)
 }
 
 function checkForAccessToRepo() {
 	try {
 		const url = 'https://api.github.com/repos/' + repo;
 		const response = request('GET', url, requestOptions);
-		return response.statusCode == 200;
+		if (response.statusCode != 200) {
+			core.setFailed('Unable to access ' + repo + ". Either the repository doesn't exist or the provided GitHub token doesn't have access. Exiting.");
+			process.exit(1)
+		}
+		return true
 	} catch (error) {
-		core.setFailed(error.message);
+		core.setFailed(error);
+		process.exit(1)
 	}
 }
