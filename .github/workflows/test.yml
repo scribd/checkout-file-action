@@ -60,9 +60,11 @@ jobs:
       - run: cat action.yml
 
   # confirm we can pull a single file from a private repo
+  # to enable this test fork the repo and set `secrets.ACCESS_TOKEN`
   checkout_from_private_repo:
     name: Private Repo/Default Branch
     runs-on: ubuntu-latest
+    if: ${{ github.repository != 'scribd/checkout-file-action' }}
     steps:
       - uses: scribd/checkout-file-action@v3
         with:
