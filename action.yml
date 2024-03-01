@@ -16,5 +16,5 @@ inputs:
     description: 'The branch to pull the file from. Defaults to the current branch if checking out a file from the current repository, otherwise defaults to the main branch of the repository being checked out.'
     required: false
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'index.js'
